@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AdminPulse – Users</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #0f0720; color: #fff; min-height: 100vh; display: flex; }
+    .sidebar { width: 240px; background: rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.08); padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; transition: transform 0.3s; }
+    .sidebar.hidden { transform: translateX(-240px); }
+    .brand { padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .brand .icon { width: 40px; height: 40px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 8px; }
+    .brand h2 { font-size: 18px; font-weight: 700; }
+    .brand p { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .nav { padding: 16px 0; flex: 1; }
+    .nav-label { font-size: 10px; color: rgba(255,255,255,0.3); padding: 12px 20px 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; color: rgba(255,255,255,0.55); font-size: 14px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-item:hover, .nav-item.active { background: rgba(168,85,247,0.15); color: #fff; border-right: 3px solid #a855f7; }
+    .nav-item .ico { font-size: 18px; width: 22px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .user-info .name { font-size: 13px; font-weight: 600; }
+    .user-info .role { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .main { margin-left: 0; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { padding: 16px 24px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .notif { position: relative; font-size: 20px; cursor: pointer; }
+    .notif-dot { width: 8px; height: 8px; background: #a855f7; border-radius: 50%; position: absolute; top: 0; right: 0; }
+    .topbar-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+    .content { padding: 24px; flex: 1; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .page-header h1 { font-size: 20px; font-weight: 700; }
+    .page-header p { color: rgba(255,255,255,0.45); font-size: 13px; margin-top: 3px; }
+    .btn-add { background: linear-gradient(135deg, #a855f7, #7c3aed); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .search-bar { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+    .search-bar input { background: none; border: none; color: #fff; font-size: 14px; outline: none; flex: 1; }
+    .search-bar input::placeholder { color: rgba(255,255,255,0.3); }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .filter-btn.active { background: rgba(168,85,247,0.2); border-color: #a855f7; color: #fff; }
+    .table-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; }
+    .table-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; padding: 12px 16px; background: rgba(255,255,255,0.05); font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+    .table-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.05); align-items: center; transition: background 0.2s; }
+    .table-row:hover { background: rgba(255,255,255,0.03); }
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .user-avatar.p { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+    .user-avatar.b { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .user-avatar.g { background: linear-gradient(135deg, #22c55e, #15803d); }
+    .user-avatar.o { background: linear-gradient(135deg, #f97316, #c2410c); }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-email { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .role-badge { font-size: 11px; color: rgba(255,255,255,0.6); }
+    .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .status-badge.active { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .status-badge.inactive { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .status-badge.pending { background: rgba(249,115,22,0.15); color: #f97316; }
+    .action-btn { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 16px; cursor: pointer; padding: 4px; }
+    .action-btn:hover { color: #a855f7; }
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .pagination-info { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .pagination-btns { display: flex; gap: 6px; }
+    .page-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: none; color: rgba(255,255,255,0.6); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .page-btn.active { background: #a855f7; border-color: #a855f7; color: #fff; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5; }
+    .overlay.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar hidden" id="sidebar">
+    <div class="brand">
+      <div class="icon">⚡</div>
+      <h2>AdminPulse</h2>
+      <p>Management Portal</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><span class="ico">🏠</span> Dashboard</a>
+      <a class="nav-item active" href="users.html"><span class="ico">👥</span> Users</a>
+      <a class="nav-item" href="#"><span class="ico">📦</span> Products</a>
+      <a class="nav-item" href="#"><span class="ico">📋</span> Orders</a>
+      <div class="nav-label">Reports</div>
+      <a class="nav-item" href="#"><span class="ico">📊</span> Analytics</a>
+      <a class="nav-item" href="#"><span class="ico">💰</span> Revenue</a>
+      <div class="nav-label">System</div>
+      <a class="nav-item" href="#"><span class="ico">⚙️</span> Settings</a>
+      <a class="nav-item" href="#"><span class="ico">🔒</span> Security</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar">A</div>
+        <div>
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main" id="main">
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title">Users</div>
+      <div class="topbar-right">
+        <div class="notif">🔔<div class="notif-dot"></div></div>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <h1>All Users</h1>
+          <p>Manage and monitor all users</p>
+        </div>
+        <button class="btn-add">+ Add User</button>
+      </div>
+
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Search users..." id="searchInput" oninput="filterUsers()"/>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All Users</button>
+        <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
+        <button class="filter-btn" onclick="setFilter('inactive', this)">Inactive</button>
+        <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div>User</div>
+          <div>Role</div>
+          <div>Status</div>
+          <div>Action</div>
+        </div>
+        <div id="tableBody"></div>
+        <div class="pagination">
+          <div class="pagination-info" id="pageInfo">Showing 1–8 of 12</div>
+          <div class="pagination-btns">
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const users = [
+      { name: 'Sarah Johnson', email: 'sarah@example.com', role: 'Admin', status: 'active', color: 'p', initial: 'S' },
+      { name: 'Mike Thompson', email: 'mike@example.com', role: 'Editor', status: 'active', color: 'b', initial: 'M' },
+      { name: 'Amaka Obi', email: 'amaka@example.com', role: 'Viewer', status: 'pending', color: 'g', initial: 'A' },
+      { name: 'James Wilson', email: 'james@example.com', role: 'Editor', status: 'inactive', color: 'o', initial: 'J' },
+      { name: 'Lisa Chen', email: 'lisa@example.com', role: 'Admin', status: 'active', color: 'p', initial: 'L' },
+      { name: 'David Eze', email: 'david@example.com', role: 'Viewer', status: 'active', color: 'b', initial: 'D' },
+      { name: 'Fatima Bello', email: 'fatima@example.com', role: 'Editor', status: 'pending', color: 'g', initial: 'F' },
+      { name: 'Chris Adeyemi', email: 'chris@example.com', role: 'Viewer', status: 'inactive', color: 'o', initial: 'C' },
+    ];
+
+    let currentFilter = 'all';
+
+    function renderTable(data) {
+      const body = document.getElementById('tableBody');
+      if (data.length === 0) {
+        body.innerHTML = '<div style="padding:24px;text-align:center;color:rgba(255,255,255,0.3);">No users found</div>';
+        return;
+      }
+      body.innerHTML = data.map(u => `
+        <div class="table-row">
+          <div class="user-cell">
+            <div class="user-avatar ${u.color}">${u.initial}</div>
+            <div>
+              <div class="user-name">${u.name}</div>
+              <div class="user-email">${u.email}</div>
+            </div>
+          </div>
+          <div class="role-badge">${u.role}</div>
+          <div><span class="status-badge ${u.status}">${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></div>
+          <div>
+            <button class="action-btn" title="Edit">✏️</button>
+            <button class="action-btn" title="Delete">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterUsers() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      let filtered = users.filter(u => currentFilter === 'all' || u.status === currentFilter);
+      filtered = filtered.filter(u => u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
+      renderTable(filtered);
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterUsers();
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('hidden');
+      document.getElementById('overlay').classList.toggle('show');
+    }
+
+    renderTable(users);
+  </script>
+</body>
+</html>
