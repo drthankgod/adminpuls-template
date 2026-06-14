@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AdminPulse – Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #0f0720; color: #fff; min-height: 100vh; display: flex; }
+    .sidebar { width: 240px; background: rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.08); padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; transition: transform 0.3s; }
+    .sidebar.hidden { transform: translateX(-240px); }
+    .brand { padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .brand .icon { width: 40px; height: 40px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 8px; }
+    .brand h2 { font-size: 18px; font-weight: 700; color: #fff; }
+    .brand p { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .nav { padding: 16px 0; flex: 1; }
+    .nav-label { font-size: 10px; color: rgba(255,255,255,0.3); padding: 12px 20px 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; color: rgba(255,255,255,0.55); font-size: 14px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-item:hover, .nav-item.active { background: rgba(168,85,247,0.15); color: #fff; border-right: 3px solid #a855f7; }
+    .nav-item .ico { font-size: 18px; width: 22px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .user-info .name { font-size: 13px; font-weight: 600; }
+    .user-info .role { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin 0.3s; }
+    .main.full { margin-left: 0; }
+    .topbar { padding: 16px 24px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .notif { position: relative; font-size: 20px; cursor: pointer; }
+    .notif-dot { width: 8px; height: 8px; background: #a855f7; border-radius: 50%; position: absolute; top: 0; right: 0; }
+    .topbar-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, #a855f7, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .content { padding: 24px; flex: 1; }
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header p { color: rgba(255,255,255,0.45); font-size: 13px; margin-top: 4px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; opacity: 0.15; }
+    .stat-card.purple::before { background: #a855f7; }
+    .stat-card.blue::before { background: #3b82f6; }
+    .stat-card.green::before { background: #22c55e; }
+    .stat-card.orange::before { background: #f97316; }
+    .stat-icon { font-size: 22px; margin-bottom: 10px; }
+    .stat-value { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+    .stat-label { font-size: 11px; color: rgba(255,255,255,0.45); }
+    .stat-change { font-size: 11px; margin-top: 6px; }
+    .stat-change.up { color: #22c55e; }
+    .stat-change.down { color: #ef4444; }
+    .section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+    .activity-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 24px; }
+    .activity-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .activity-item:last-child { border-bottom: none; }
+    .act-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .act-icon.purple { background: rgba(168,85,247,0.2); }
+    .act-icon.blue { background: rgba(59,130,246,0.2); }
+    .act-icon.green { background: rgba(34,197,94,0.2); }
+    .act-icon.orange { background: rgba(249,115,22,0.2); }
+    .act-info { flex: 1; }
+    .act-info .act-title { font-size: 13px; font-weight: 500; }
+    .act-info .act-time { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .act-status { font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+    .act-status.success { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .act-status.pending { background: rgba(249,115,22,0.15); color: #f97316; }
+    .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .quick-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .quick-btn:hover { background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.4); }
+    .quick-btn .q-icon { font-size: 24px; margin-bottom: 6px; }
+    .quick-btn .q-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5; }
+    .overlay.show { display: block; }
+    @media(max-width: 600px) { .sidebar { z-index: 10; } .main { margin-left: 0; } }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar hidden" id="sidebar">
+    <div class="brand">
+      <div class="icon">⚡</div>
+      <h2>AdminPulse</h2>
+      <p>Management Portal</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <a class="nav-item active" href="dashboard.html"><span class="ico">🏠</span> Dashboard</a>
+      <a class="nav-item" href="users.html"><span class="ico">👥</span> Users</a>
+      <a class="nav-item" href="#"><span class="ico">📦</span> Products</a>
+      <a class="nav-item" href="#"><span class="ico">📋</span> Orders</a>
+      <div class="nav-label">Reports</div>
+      <a class="nav-item" href="#"><span class="ico">📊</span> Analytics</a>
+      <a class="nav-item" href="#"><span class="ico">💰</span> Revenue</a>
+      <div class="nav-label">System</div>
+      <a class="nav-item" href="#"><span class="ico">⚙️</span> Settings</a>
+      <a class="nav-item" href="#"><span class="ico">🔒</span> Security</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar">A</div>
+        <div>
+          <div class="name">Admin User</div>
+          <div class="role">Super Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="main full" id="main">
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="notif">🔔<div class="notif-dot"></div></div>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-header">
+        <h1>Welcome back, Admin 👋</h1>
+        <p>Here's what's happening today</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card purple">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value">2,847</div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-change up">↑ 12% this week</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📦</div>
+          <div class="stat-value">1,294</div>
+          <div class="stat-label">Total Products</div>
+          <div class="stat-change up">↑ 5% this week</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">💰</div>
+          <div class="stat-value">$48.2K</div>
+          <div class="stat-label">Revenue</div>
+          <div class="stat-change up">↑ 18% this month</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">📋</div>
+          <div class="stat-value">364</div>
+          <div class="stat-label">Pending Orders</div>
+          <div class="stat-change down">↓ 3% today</div>
+        </div>
+      </div>
+      <div class="section-title">Recent Activity</div>
+      <div class="activity-card">
+        <div class="activity-item">
+          <div class="act-icon purple">👤</div>
+          <div class="act-info">
+            <div class="act-title">New user registered</div>
+            <div class="act-time">2 minutes ago</div>
+          </div>
+          <span class="act-status success">Done</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon blue">📦</div>
+          <div class="act-info">
+            <div class="act-title">Product #1042 updated</div>
+            <div class="act-time">15 minutes ago</div>
+          </div>
+          <span class="act-status success">Done</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon orange">📋</div>
+          <div class="act-info">
+            <div class="act-title">Order #8821 awaiting approval</div>
+            <div class="act-time">1 hour ago</div>
+          </div>
+          <span class="act-status pending">Pending</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon green">💰</div>
+          <div class="act-info">
+            <div class="act-title">Payment of $1,200 received</div>
+            <div class="act-time">3 hours ago</div>
+          </div>
+          <span class="act-status success">Done</span>
+        </div>
+      </div>
+      <div class="section-title">Quick Actions</div>
+      <div class="quick-grid">
+        <div class="quick-btn"><div class="q-icon">➕</div><div class="q-label">Add User</div></div>
+        <div class="quick-btn"><div class="q-icon">📦</div><div class="q-label">New Product</div></div>
+        <div class="quick-btn"><div class="q-icon">📊</div><div class="q-label">View Reports</div></div>
+        <div class="quick-btn"><div class="q-icon">⚙️</div><div class="q-label">Settings</div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      sidebar.classList.toggle('hidden');
+      overlay.classList.toggle('show');
+    }
+  </script>
+</body>
+</html>
